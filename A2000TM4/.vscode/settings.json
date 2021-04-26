@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "pin_map.h": "c",
+        "hw_types.h": "c"
+    }
+}
