@@ -380,14 +380,14 @@
           <GroupName>Source Group 1</GroupName>
           <Files>
             <File>
-              <FileName>exp1_1.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\exp1_1.c</FilePath>
-            </File>
-            <File>
               <FileName>uartstdio.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\uartstdio.c</FilePath>
+            </File>
+            <File>
+              <FileName>exp1_2.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\exp1_2.c</FilePath>
             </File>
           </Files>
         </Group>
