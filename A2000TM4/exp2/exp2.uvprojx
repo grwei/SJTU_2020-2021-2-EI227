@@ -384,6 +384,11 @@
               <FileType>1</FileType>
               <FilePath>.\tm1638.c</FilePath>
             </File>
+            <File>
+              <FileName>exp2_4.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\exp2_4.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
