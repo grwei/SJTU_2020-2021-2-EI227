@@ -390,9 +390,9 @@
               <FilePath>.\uartstdio.c</FilePath>
             </File>
             <File>
-              <FileName>exp3_2.c</FileName>
+              <FileName>exp3_3.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\exp3_2.c</FilePath>
+              <FilePath>.\exp3_3.c</FilePath>
             </File>
           </Files>
         </Group>

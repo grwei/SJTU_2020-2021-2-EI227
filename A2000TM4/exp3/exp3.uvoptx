@@ -161,49 +161,44 @@
         <Bp>
           <Number>0</Number>
           <Type>0</Type>
-          <LineNumber>381</LineNumber>
+          <LineNumber>350</LineNumber>
           <EnabledFlag>1</EnabledFlag>
-          <Address>7056</Address>
+          <Address>6474</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
           <ManyObjects>0</ManyObjects>
           <SizeOfObject>0</SizeOfObject>
           <BreakByAccess>0</BreakByAccess>
           <BreakIfRCount>1</BreakIfRCount>
-          <Filename>D:\SJTU\Bachelor\2020-2021,2\宸ョ▼瀹炶返涓庣鎶€鍒涙柊II-A\project\SJTU_2020-2021-2-EI227\A2000TM4\exp3\exp3_2.c</Filename>
+          <Filename>D:\SJTU\Bachelor\2020-2021,2\宸ョ▼瀹炶返涓庣鎶€鍒涙柊II-A\project\SJTU_2020-2021-2-EI227\A2000TM4\exp3\exp3_3.c</Filename>
           <ExecCommand></ExecCommand>
-          <Expression>\\exp3\exp3_2.c\381</Expression>
+          <Expression>\\exp3\exp3_3.c\350</Expression>
         </Bp>
         <Bp>
           <Number>1</Number>
           <Type>0</Type>
-          <LineNumber>317</LineNumber>
+          <LineNumber>350</LineNumber>
           <EnabledFlag>1</EnabledFlag>
-          <Address>6460</Address>
+          <Address>6584</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
           <ManyObjects>0</ManyObjects>
           <SizeOfObject>0</SizeOfObject>
           <BreakByAccess>0</BreakByAccess>
           <BreakIfRCount>1</BreakIfRCount>
-          <Filename>D:\SJTU\Bachelor\2020-2021,2\宸ョ▼瀹炶返涓庣鎶€鍒涙柊II-A\project\SJTU_2020-2021-2-EI227\A2000TM4\exp3\exp3_2.c</Filename>
+          <Filename>D:\SJTU\Bachelor\2020-2021,2\宸ョ▼瀹炶返涓庣鎶€鍒涙柊II-A\project\SJTU_2020-2021-2-EI227\A2000TM4\exp3\exp3_3.c</Filename>
           <ExecCommand></ExecCommand>
-          <Expression>\\exp3\exp3_2.c\317</Expression>
+          <Expression>\\exp3\exp3_3.c\350</Expression>
         </Bp>
       </Breakpoint>
       <WatchWindow1>
         <Ww>
           <count>0</count>
           <WinNumber>1</WinNumber>
-          <ItemText>Rx_buf,0x0A</ItemText>
-        </Ww>
-        <Ww>
-          <count>1</count>
-          <WinNumber>1</WinNumber>
           <ItemText>cmd_Rx_buf,0x0A</ItemText>
         </Ww>
         <Ww>
-          <count>2</count>
+          <count>1</count>
           <WinNumber>1</WinNumber>
           <ItemText>cmd_Tx_buf,0x0A</ItemText>
         </Ww>
@@ -285,8 +280,8 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>.\exp3_2.c</PathWithFileName>
-      <FilenameWithoutPath>exp3_2.c</FilenameWithoutPath>
+      <PathWithFileName>.\exp3_3.c</PathWithFileName>
+      <FilenameWithoutPath>exp3_3.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
     </File>
