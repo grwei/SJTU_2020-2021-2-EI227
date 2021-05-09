@@ -5,10 +5,10 @@
 // Description:
 //     任务3_3
 // Author:	上海交通大学电子工程系实验教学中心；危国锐(313017602@qq.com)
-// Version: 1.0.0.20201228
+// Version: 1.1.0.20210508
 // Date：2020-12-28
 // History：
-//    2021-04-30 修改：改为用非阻塞（中断）方式进行发送与接收
+//    2021-05-08 修改：改为用非阻塞（中断）方式进行发送与接收
 //
 //*****************************************************************************
 
@@ -48,6 +48,7 @@
 #define V_T1000ms 50                    // 1.0s软件定时器溢出值，50个20ms
 const uint8_t CMD_RX_BUF_MAX_SIZE = 60; // 命令接收缓存区最大容量
 #define CMD_TX_BUF_MAX_SIZE 60          // 命令发送缓存区最大容量
+#define V_CMD_RX_TIMEOUT 1              // 命令接收超时阈值，1个20ms
 
 //*****************************************************************************
 //
@@ -96,29 +97,48 @@ volatile uint8_t key_code = 0;
 uint32_t ui32SysClock;
 
 /**
- * @brief 命令接收缓存区结构体
+ * @brief 命令收发缓存区
  * 
  */
-struct cmd_Rx_buf_t
+struct cmd_buf_t
 {
-    volatile uint8_t size;                                // 当前缓存区内容长度
-    const uint8_t max_size;                               // 缓存区最大容量
-    volatile unsigned char data[CMD_RX_BUF_MAX_SIZE + 1]; // 缓存区数据
-    volatile bool WriteEnable;                            // True-写允许；False-提示缓存区中有一个待处理的命令
-} cmd_Rx_buf = {0, CMD_RX_BUF_MAX_SIZE, {'\0'}, true};
+    /**
+     * @brief 命令接收缓存区结构体
+     * 
+     */
+    struct cmd_Rx_buf_t
+    {
+        volatile uint8_t size;                                // 当前缓存区内容长度
+        const uint8_t max_size;                               // 缓存区最大容量
+        volatile unsigned char data[CMD_RX_BUF_MAX_SIZE + 1]; // 缓存区数据
+        volatile bool WriteEnable;                            // True-写允许；False-提示缓存区中有一个待处理的命令
+    } Rx;                                                     /* = {0, CMD_RX_BUF_MAX_SIZE, {'\0'}, true}; */
 
-/**
- * @brief 命令发送缓存区结构体
- * 
- */
-struct cmd_Tx_buf_t
-{
-    volatile uint8_t size;                                // 当前缓存区内容长度
-    const uint8_t max_size;                               // 缓存区最大容量
-    volatile unsigned char data[CMD_TX_BUF_MAX_SIZE + 1]; // 数据
-    volatile uint8_t next_trans_index;                    // 下一次将发送的数据的下标. 当达到size时，表示已发送完成.
-    volatile bool WriteEnable;                            // True-写允许；False-提示缓存区中有未发送完毕的数据
-} cmd_Tx_buf = {0, CMD_TX_BUF_MAX_SIZE, {'\0'}, 0, true};
+    /**
+     * @brief 命令发送缓存区结构体
+     * 
+     */
+    struct cmd_Tx_buf_t
+    {
+        volatile uint8_t size;                                // 当前缓存区内容长度
+        const uint8_t max_size;                               // 缓存区最大容量
+        volatile unsigned char data[CMD_TX_BUF_MAX_SIZE + 1]; // 数据
+        volatile uint8_t next_trans_index;                    // 下一次将发送的数据的下标. 当达到size时，表示已发送完成.
+        volatile bool WriteEnable;                            // True-写允许；False-提示缓存区中有未发送完毕的数据
+    } Tx;                                                     /* = {0, cmd_buf.Tx_MAX_SIZE, {'\0'}, 0, true}; */
+
+    /**
+     * FSM 规则：
+     * 1. 状态定义. 0-IDLE（空闲）；1-BUSY_RX（接收忙）；2-BUSY_TX（处理或发送忙）.
+     * 2. 状态动作. 0-无；1-接收时间窗计数进行，把进入 UART Rx FIFO 的数据全部存入命令接收缓存区（直至缓存区满）；2-执行命令（若合法）、决定 UART 回传内容、将回传内容（若有）写入命令发送缓存区、置命令发送缓存区相关标志并关写允许（若有写入）、以**非阻塞方式**将命令发送缓存区的数据（若有）送到 UART Tx FIFO.
+     * 3. 状态转移条件. C01-发生 `UART_RX` 或 `UART_RT` 中断；C12-接收计时结束；C20-命令（**若有且**合法）执行完毕，且回传内容（若有）已全部送到 UART Tx FIFO；C02-定时1秒到.
+     * 4. 状态转移动作. C01-接收时间计数器复位、接收缓存区复位、将第一个字符存入接收缓存区；C12-关命令接收缓存区写允许，发送缓存区复位；C20-无；C02-关命令接收缓存区写允许、发送缓存区复位、将报时信息写入发送缓存区、关发送缓存区写允许.
+     */
+    volatile uint8_t state;          // 当前状态
+    volatile uint8_t Rx_timeout_cnt; // 接收时间计数器
+    const uint8_t V_Rx_timeout;      // 接收时长
+
+} cmd_buf = {{0, CMD_RX_BUF_MAX_SIZE, {'\0'}, true}, {0, CMD_TX_BUF_MAX_SIZE, {'\0'}, 0, true}, 0, 0, V_CMD_RX_TIMEOUT};
 
 //*****************************************************************************
 //
@@ -134,46 +154,41 @@ int main(void)
 
     while (1)
     {
+        char src_str[CMD_RX_BUF_MAX_SIZE] = {'\0'};
         if (clock1000ms_flag == 1) // 检查1.0秒定时是否到
         {
-            char src_str[CMD_RX_BUF_MAX_SIZE] = {'\0'};
-
             clock1000ms_flag = 0;
-            if (++counter_ss == 60)
+            if (++counter_ss > 59)
             {
                 counter_ss = 0;
-                if (++counter_mm == 60)
+                if (++counter_mm > 59)
                 {
                     counter_mm = 0;
-                    if (++counter_hh == 24)
+                    if (++counter_hh > 23)
                     {
                         counter_hh = 0;
                     }
                 }
             }
-
-            // 3.2.2 准备写入命令发送缓存区的数据
-            sprintf(src_str, "现在是中华人民共和国北京时间%.2hhu:%.2hhu:%.2hhu\n",
-                    counter_hh, counter_mm, counter_ss);
-
-            // 3.2.3 向命令发送缓存区写入数据，并置相应的标志
-            strcpy((char *)cmd_Tx_buf.data, (const char *)src_str);
-            cmd_Tx_buf.size = strlen((const char *)cmd_Tx_buf.data);
-            cmd_Tx_buf.next_trans_index = 0;
-            cmd_Tx_buf.WriteEnable = false; // 向命令发送缓存区写入完毕，关写允许（将触发一个发送事件）
-
-            // 尝试用命令发送缓存区的数据（如果有）填满 Tx FIFO
-            while (!cmd_Tx_buf.WriteEnable && cmd_Tx_buf.size && UARTSpaceAvail(UART0_BASE))
+            if (!cmd_buf.state)
             {
-                if (UARTCharPutNonBlocking(UART0_BASE, cmd_Tx_buf.data[cmd_Tx_buf.next_trans_index]))
-                {
-                    // 若全部发送完毕，则清空命令发送缓存区，开写允许
-                    if (++cmd_Tx_buf.next_trans_index >= cmd_Tx_buf.size)
-                    {
-                        cmd_Tx_buf.size = cmd_Tx_buf.next_trans_index = 0;
-                        cmd_Tx_buf.WriteEnable = true;
-                    }
-                }
+                // C02
+                cmd_buf.Rx.WriteEnable = false;
+                cmd_buf.Tx.WriteEnable = true;
+                memset((void *)cmd_buf.Tx.data, 0, cmd_buf.Tx.max_size);
+                cmd_buf.Tx.next_trans_index = cmd_buf.Tx.size = 0;
+
+                // 3.2.2 准备写入命令发送缓存区的数据
+                sprintf(src_str, "现在是中华人民共和国北京时间%.2hhu:%.2hhu:%.2hhu\n",
+                        counter_hh, counter_mm, counter_ss);
+
+                // 3.2.3 向命令发送缓存区写入数据，并置相应的标志
+                strcpy((char *)cmd_buf.Tx.data, (const char *)src_str);
+                cmd_buf.Tx.size = strlen((const char *)cmd_buf.Tx.data);
+                cmd_buf.Tx.next_trans_index = 0;
+                cmd_buf.Tx.WriteEnable = false; // 向命令发送缓存区写入完毕，关写允许（将触发一个发送事件）
+                
+                cmd_buf.state = 2;
             }
         }
 
@@ -185,7 +200,7 @@ int main(void)
         digit[0] = counter_ss / 10;
         digit[1] = counter_ss % 10;
 
-        UART_clock(); // 基于 UART 的时钟处理
+        UART_clock(); // 基于 UART 的时钟处理函数
     }
 }
 
@@ -273,7 +288,7 @@ void UARTInit(void)
     // 波特率及帧格式设置
     UARTConfigSetExpClk(UART0_BASE,
                         ui32SysClock,
-                        115200,                  // 波特率：115200
+                        9600,                  // 波特率：115200
                         (UART_CONFIG_WLEN_8 |    // 数据位：8
                          UART_CONFIG_STOP_ONE |  // 停止位：1
                          UART_CONFIG_PAR_NONE)); // 校验位：无
@@ -324,6 +339,17 @@ void SysTick_Handler(void) // 定时周期为20ms
         clock1000ms = 0;
     }
 
+    // 命令接收缓存区计数
+    if (cmd_buf.state == 1 && ++cmd_buf.Rx_timeout_cnt >= cmd_buf.V_Rx_timeout)
+    {
+        // C12
+        cmd_buf.Rx.WriteEnable = false;
+        cmd_buf.Tx.WriteEnable = true;
+        memset((void *)cmd_buf.Tx.data, 0, cmd_buf.Tx.max_size);
+        cmd_buf.Tx.next_trans_index = cmd_buf.Tx.size = 0;
+        cmd_buf.state = 2;
+    }
+
     // 刷新全部数码管和LED指示灯
     TM1638_RefreshDIGIandLED(digit, pnt, led);
 
@@ -347,52 +373,52 @@ void UART0_Handler(void)
     {
     case UART_INT_RT:                      // Receive Timeout Interrupt
     case UART_INT_RX:                      // Receive Interrupt
-        while (UARTCharsAvail(UART0_BASE)) // 重复从接收 FIFO 读取字符
+        while (UARTCharsAvail(UART0_BASE)) // 将 UART Rx FIFO 中的数据全部读入命令接收缓存区
         {
             uint8_t uart_receive_char = UARTCharGetNonBlocking(UART0_BASE); // 读入一个字符
-
-            /**
-             * 若命令接收缓存区允许写入，
-             * 则将 UART 端口的 Rx FIFO 中的内容写入 cmd_Rx_buf，
-             * 直至读到一个命令终止符.
-             */
-            if (cmd_Rx_buf.WriteEnable)
+            if (!cmd_buf.state)
             {
-                // 若命令接收缓存区已满，则关写允许
-                if (cmd_Rx_buf.size >= cmd_Rx_buf.max_size)
+                cmd_buf.state = 1;
+
+                // C01
+                cmd_buf.Rx_timeout_cnt = 0;
+                memset((void *)cmd_buf.Rx.data, 0, cmd_buf.Rx.max_size);
+                cmd_buf.Rx.size = 0;
+                cmd_buf.Rx.WriteEnable = true;
+                cmd_buf.Rx.data[cmd_buf.Rx.size++] = uart_receive_char;
+            }
+            else if (cmd_buf.state == 1)
+            {
+                // 若命令接收缓存区已满，则提前终止接收
+                if (cmd_buf.Rx.size >= cmd_buf.Rx.max_size)
                 {
-                    cmd_Rx_buf.data[cmd_Rx_buf.max_size - 1] = '\0';
-                    cmd_Rx_buf.WriteEnable = false;
-                }
-                // tab ('\t'), white-space control codes ('\f','\v','\n','\r')
-                // 和 space (' ')被视为命令终止符，写入停止.
-                else if (isspace(uart_receive_char))
-                {
-                    cmd_Rx_buf.data[cmd_Rx_buf.size] = '\0'; // 保证缓存区构成合法字符串
-                    // 若首字符即为命令终止符，则忽略此次接收，即不要关写允许
-                    if (cmd_Rx_buf.size)
-                    {
-                        cmd_Rx_buf.WriteEnable = false; // 写入完毕，关写允许
-                    }
+                    cmd_buf.Rx.data[cmd_buf.Rx.max_size - 1] = '\0';
+
+                    // C12
+                    cmd_buf.Rx.WriteEnable = false;
+                    cmd_buf.Tx.WriteEnable = true;
+                    memset((void *)cmd_buf.Tx.data, 0, cmd_buf.Tx.max_size);
+                    cmd_buf.Tx.next_trans_index = cmd_buf.Tx.size = 0;
+                    cmd_buf.state = 2;
                 }
                 else
                 {
-                    cmd_Rx_buf.data[cmd_Rx_buf.size++] = uart_receive_char;
+                    cmd_buf.Rx.data[cmd_buf.Rx.size++] = uart_receive_char;
                 }
             }
         }
         break;
     case UART_INT_TX: // Transmit Interrupt
-        // 尝试用命令发送缓存区的数据（如果有）填满 Tx FIFO
-        while (!cmd_Tx_buf.WriteEnable && cmd_Tx_buf.size && UARTSpaceAvail(UART0_BASE))
+        // 尝试用命令发送缓存区的待发送数据（若有）填满 Tx FIFO
+        while (cmd_buf.state == 2 && !cmd_buf.Tx.WriteEnable && cmd_buf.Tx.size && UARTSpaceAvail(UART0_BASE))
         {
-            if (UARTCharPutNonBlocking(UART0_BASE, cmd_Tx_buf.data[cmd_Tx_buf.next_trans_index]))
+            if (UARTCharPutNonBlocking(UART0_BASE, cmd_buf.Tx.data[cmd_buf.Tx.next_trans_index]))
             {
                 // 若全部发送完毕，则清空命令发送缓存区，开写允许
-                if (++cmd_Tx_buf.next_trans_index >= cmd_Tx_buf.size)
+                if (++cmd_buf.Tx.next_trans_index >= cmd_buf.Tx.size)
                 {
-                    cmd_Tx_buf.size = cmd_Tx_buf.next_trans_index = 0;
-                    cmd_Tx_buf.WriteEnable = true;
+                    // C20
+                    cmd_buf.state = 0;
                 }
             }
         }
@@ -405,19 +431,19 @@ void UART0_Handler(void)
 /**
  * @brief 基于 UART 的时钟处理函数
  * 
- * 首先判断命令接收缓存区 cmd_Rx_buf 是否存在已接收完毕的待处理命令，
- * 若有，则作出相应处理，以非阻塞方式向命令发送缓存区 cmd_Tx_buf 填数据；
+ * 首先判断命令接收缓存区 cmd_buf.Rx 是否存在已接收完毕的待处理命令，
+ * 若有，则作出相应处理，以非阻塞方式向命令发送缓存区 cmd_buf.Tx 填数据；
  * 然后，以非阻塞方式将命令发送缓存区的数据送往 UART 端口的 Tx FIFO.
  */
 void UART_clock(void)
 {
-    // 当有接收事件（此时接收缓存区的写允许标志被关闭），且命令发送缓存区 cmd_Tx_buf 允许写入，则开始处理接收缓存区的数据
-    if (!cmd_Rx_buf.WriteEnable && cmd_Tx_buf.WriteEnable)
+    // 当有接收事件（状态2，且命令发送缓存区 cmd_buf.Tx 允许写入），则开始处理接收缓存区的数据
+    if (cmd_buf.state == 2 && cmd_buf.Tx.WriteEnable)
     {
         // 1. 接收到查询时间命令
-        if (!strcmp("AT+GET", (const char *)cmd_Rx_buf.data))
+        if (!strcmp("AT+GET", (const char *)cmd_buf.Rx.data))
         {
-            // char *src_str = (char *)calloc(cmd_Tx_buf.max_size, sizeof(unsigned char));
+            // char *src_str = (char *)calloc(cmd_buf.Tx.max_size, sizeof(unsigned char));
             char src_str[CMD_RX_BUF_MAX_SIZE] = {'\0'};
 
             // 1.1 准备写入命令发送缓存区的数据
@@ -425,27 +451,27 @@ void UART_clock(void)
                     counter_hh, counter_mm, counter_ss);
 
             // 1.2 向命令发送缓存区写入数据，并置相应的标志
-            strcpy((char *)cmd_Tx_buf.data, (const char *)src_str);
-            cmd_Tx_buf.size = strlen((const char *)cmd_Tx_buf.data);
-            cmd_Tx_buf.next_trans_index = 0;
-            cmd_Tx_buf.WriteEnable = false; // 向命令发送缓存区写入完毕，关写允许
+            strcpy((char *)cmd_buf.Tx.data, (const char *)src_str);
+            cmd_buf.Tx.size = strlen((const char *)cmd_buf.Tx.data);
+            cmd_buf.Tx.next_trans_index = 0;
+            cmd_buf.Tx.WriteEnable = false; // 向命令发送缓存区写入完毕，关写允许
 
             // free(src_str);
         }
         // 2. 接收到（疑似）绝对对时命令
-        else if (!strncmp("AT+SET", (const char *)cmd_Rx_buf.data, 6))
+        else if (!strncmp("AT+SET", (const char *)cmd_buf.Rx.data, 6) && strlen((const char *)cmd_buf.Rx.data) == strlen("AT+SET12:34:56"))
         {
             uint8_t hh, mm, ss;
 
             // 2.1 若解析不成功，或解析成功但取值不合规，则准备发送报错信息
-            if (sscanf((const char *)cmd_Rx_buf.data,
+            if (sscanf((const char *)cmd_buf.Rx.data,
                        "AT+SET%2hhu:%2hhu:%3hhu", &hh, &mm, &ss) < 3 ||
-                hh > 23 || mm > 59 || ss > 59) // inc_ss采取%3hhu形式，是为检查秒数位数超过2
+                hh > 23 || mm > 59 || ss > 59)
             {
-                strcpy((char *)cmd_Tx_buf.data, "Error Command!");
-                cmd_Tx_buf.size = strlen((const char *)cmd_Tx_buf.data);
-                cmd_Tx_buf.next_trans_index = 0;
-                cmd_Tx_buf.WriteEnable = false; // 向命令发送缓存区写入完毕，关写允许
+                strcpy((char *)cmd_buf.Tx.data, "Error Command!");
+                cmd_buf.Tx.size = strlen((const char *)cmd_buf.Tx.data);
+                cmd_buf.Tx.next_trans_index = 0;
+                cmd_buf.Tx.WriteEnable = false; // 向命令发送缓存区写入完毕，关写允许
             }
             // 2.2 匹配成功，执行绝对对时动作
             else
@@ -453,36 +479,39 @@ void UART_clock(void)
                 counter_hh = hh;
                 counter_mm = mm;
                 counter_ss = ss;
+
+                // C20
+                cmd_buf.state = 0;
             }
         }
         // 3. 接收到（疑似）相对对时命令
-        else if (!strncmp("AT+INC", (const char *)cmd_Rx_buf.data, 6))
+        else if (!strncmp("AT+INC", (const char *)cmd_buf.Rx.data, 6) && strlen((const char *)cmd_buf.Rx.data) == strlen("AT+INC12:34:56"))
         {
             uint8_t inc_hh, inc_mm, inc_ss;
 
             // 3.1 若解析不成功，或解析成功但取值不合规，则准备发送报错信息
-            if (sscanf((const char *)cmd_Rx_buf.data,
-                       "AT+INC%2hhu:%2hhu:%3hhu", &inc_hh, &inc_mm, &inc_ss) < 3 ||
-                inc_hh > 23 || inc_mm > 59 || inc_ss > 59) // inc_ss采取%3hhu形式，是为检查秒数位数超过2
+            if (sscanf((const char *)cmd_buf.Rx.data,
+                       "AT+INC%2hhu:%2hhu:%2hhu", &inc_hh, &inc_mm, &inc_ss) < 3 ||
+                inc_hh > 23 || inc_mm > 59 || inc_ss > 59)
             {
-                strcpy((char *)cmd_Tx_buf.data, "Error Command!");
-                cmd_Tx_buf.size = strlen((const char *)cmd_Tx_buf.data);
-                cmd_Tx_buf.next_trans_index = 0;
-                cmd_Tx_buf.WriteEnable = false; // 向命令发送缓存区写入完毕，关写允许
+                strcpy((char *)cmd_buf.Tx.data, "Error Command!");
+                cmd_buf.Tx.size = strlen((const char *)cmd_buf.Tx.data);
+                cmd_buf.Tx.next_trans_index = 0;
+                cmd_buf.Tx.WriteEnable = false; // 向命令发送缓存区写入完毕，关写允许
             }
             // 3.2 匹配成功，执行相对对时动作，然后向PC端发回当前时间
             else
             {
-                // char *src_str = (char *)calloc(cmd_Tx_buf.max_size, sizeof(char));
+                // char *src_str = (char *)calloc(cmd_buf.Tx.max_size, sizeof(char));
                 char src_str[CMD_RX_BUF_MAX_SIZE] = {'\0'};
 
                 // 3.2.1 执行相对对时动作
-                if ((counter_ss += inc_ss) > 60)
+                if ((counter_ss += inc_ss) > 59)
                 {
                     counter_mm += counter_ss / 60;
                     counter_ss %= 60;
                 }
-                if ((counter_mm += inc_mm) > 60)
+                if ((counter_mm += inc_mm) > 59)
                 {
                     counter_hh += counter_mm / 60;
                     counter_mm %= 60;
@@ -497,10 +526,10 @@ void UART_clock(void)
                         counter_hh, counter_mm, counter_ss);
 
                 // 3.2.3 向命令发送缓存区写入数据，并置相应的标志
-                strcpy((char *)cmd_Tx_buf.data, (const char *)src_str);
-                cmd_Tx_buf.size = strlen((const char *)cmd_Tx_buf.data);
-                cmd_Tx_buf.next_trans_index = 0;
-                cmd_Tx_buf.WriteEnable = false; // 向命令发送缓存区写入完毕，关写允许
+                strcpy((char *)cmd_buf.Tx.data, (const char *)src_str);
+                cmd_buf.Tx.size = strlen((const char *)cmd_buf.Tx.data);
+                cmd_buf.Tx.next_trans_index = 0;
+                cmd_buf.Tx.WriteEnable = false; // 向命令发送缓存区写入完毕，关写允许
 
                 // free(src_str);
             }
@@ -508,28 +537,24 @@ void UART_clock(void)
         // 4. 接收到非法命令
         else
         {
-            strcpy((char *)cmd_Tx_buf.data, "Error Command!");
-            cmd_Tx_buf.size = strlen((const char *)cmd_Tx_buf.data);
-            cmd_Tx_buf.next_trans_index = 0;
-            cmd_Tx_buf.WriteEnable = false; // 向命令发送缓存区写入完毕，关写允许
+            strcpy((char *)cmd_buf.Tx.data, "Error Command!");
+            cmd_buf.Tx.size = strlen((const char *)cmd_buf.Tx.data);
+            cmd_buf.Tx.next_trans_index = 0;
+            cmd_buf.Tx.WriteEnable = false; // 向命令发送缓存区写入完毕，关写允许
         }
-
-        // 命令接收缓存区数据处理完毕，复位命令接收缓存区
-        cmd_Rx_buf.size = 0;           // 清空命令接收缓存区
-        cmd_Rx_buf.WriteEnable = true; // 处理完毕，命令接收缓存区开写允许
     }
 
     // 若命令发送缓存区已写入完毕（此时写允许关闭，且缓存区非空），
     // 则尝试用命令发送缓存区的数据（如果有）填满 Tx FIFO
-    while (!cmd_Tx_buf.WriteEnable && cmd_Tx_buf.size && UARTSpaceAvail(UART0_BASE))
+    while (cmd_buf.state == 2 && !cmd_buf.Tx.WriteEnable && cmd_buf.Tx.size && UARTSpaceAvail(UART0_BASE))
     {
-        if (UARTCharPutNonBlocking(UART0_BASE, cmd_Tx_buf.data[cmd_Tx_buf.next_trans_index]))
+        if (UARTCharPutNonBlocking(UART0_BASE, cmd_buf.Tx.data[cmd_buf.Tx.next_trans_index]))
         {
-            // 若全部发送完毕，则复位命令发送缓存区
-            if (++cmd_Tx_buf.next_trans_index >= cmd_Tx_buf.size)
+            // 若全部发送完毕，则转移至状态0
+            if (++cmd_buf.Tx.next_trans_index >= cmd_buf.Tx.size)
             {
-                cmd_Tx_buf.size = cmd_Tx_buf.next_trans_index = 0; // 清空命令发送缓存区
-                cmd_Tx_buf.WriteEnable = true;                     // 开命令发送缓存区写允许
+                // C20
+                cmd_buf.state = 0;
             }
         }
     }

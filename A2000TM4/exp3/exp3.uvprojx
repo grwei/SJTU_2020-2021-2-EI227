@@ -389,11 +389,6 @@
               <FileType>1</FileType>
               <FilePath>.\uartstdio.c</FilePath>
             </File>
-            <File>
-              <FileName>exp3_3.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\exp3_3.c</FilePath>
-            </File>
           </Files>
         </Group>
         <Group>
