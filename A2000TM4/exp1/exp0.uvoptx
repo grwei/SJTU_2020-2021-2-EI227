@@ -144,11 +144,6 @@
         </SetRegEntry>
         <SetRegEntry>
           <Number>0</Number>
-          <Key>DLGUARM</Key>
-          <Name>烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫萡?燏蜽&lt;?</Name>
-        </SetRegEntry>
-        <SetRegEntry>
-          <Number>0</Number>
           <Key>lmidk-agdi</Key>
           <Name>-U0F00C78C -O4622 -S3 -FO29</Name>
         </SetRegEntry>
@@ -164,14 +159,14 @@
           <Type>0</Type>
           <LineNumber>60</LineNumber>
           <EnabledFlag>1</EnabledFlag>
-          <Address>2776</Address>
+          <Address>2758</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
           <ManyObjects>0</ManyObjects>
           <SizeOfObject>0</SizeOfObject>
           <BreakByAccess>0</BreakByAccess>
           <BreakIfRCount>1</BreakIfRCount>
-          <Filename>D:\SJTU\Bachelor\2020-2021,2\宸ョ▼瀹炶返涓庣鎶€鍒涙柊II-A\project\A2000TM4\exp1\exp1_1.c</Filename>
+          <Filename>D:\SJTU\Bachelor\2020-2021,2\宸ョ▼瀹炶返涓庣鎶€鍒涙柊II-A\project\SJTU_2020-2021-2-EI227\A2000TM4\exp1\exp1_1.c</Filename>
           <ExecCommand></ExecCommand>
           <Expression>\\exp0\exp1_1.c\60</Expression>
         </Bp>
@@ -180,7 +175,12 @@
         <Ww>
           <count>0</count>
           <WinNumber>1</WinNumber>
-          <ItemText>ui32SysClock,0x0A</ItemText>
+          <ItemText>ui32SysClock,0x10</ItemText>
+        </Ww>
+        <Ww>
+          <count>1</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>g_ui32SysClock,0x0A</ItemText>
         </Ww>
       </WatchWindow1>
       <Tracepoint>
@@ -248,8 +248,8 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>.\exp1_2.c</PathWithFileName>
-      <FilenameWithoutPath>exp1_2.c</FilenameWithoutPath>
+      <PathWithFileName>.\exp1_1.c</PathWithFileName>
+      <FilenameWithoutPath>exp1_1.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
     </File>

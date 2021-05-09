@@ -57,7 +57,7 @@ int main(void)
 {
     uint8_t ui8KeyValue;
     volatile uint32_t ui32SysClock, g_ui32SysClock;
-    g_ui32SysClock = exp1_1_SysClockSel(0); // 用于完成实验1的表格1-1
+    // g_ui32SysClock = exp1_1_SysClockSel(7); // 用于完成实验1的表格1-1
     ui32SysClock = SysCtlClockFreqSet(SYSCTL_XTAL_25MHZ | SYSCTL_OSC_MAIN | SYSCTL_USE_PLL | SYSCTL_CFG_VCO_320, 16000000);
     GPIOInit(); // GPIO初始化
 
@@ -128,7 +128,7 @@ void PF0Flash(uint8_t ui8KeyValue)
 {
     uint32_t ui32DelayTime;
 
-    if (ui8KeyValue == 0) // PUSH1(USR_SW1-PJ0) 按下
+    if (ui8KeyValue == 0) // PUSH1(USR_SW1-PJ0) 按下（低有效）
         ui32DelayTime = FASTFLASHTIME;
     else // PUSH1(USR_SW1-PJ0) 松开
         ui32DelayTime = SLOWFLASHTIME;

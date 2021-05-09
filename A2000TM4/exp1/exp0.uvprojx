@@ -385,9 +385,9 @@
               <FilePath>.\uartstdio.c</FilePath>
             </File>
             <File>
-              <FileName>exp1_2.c</FileName>
+              <FileName>exp1_1.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\exp1_2.c</FilePath>
+              <FilePath>.\exp1_1.c</FilePath>
             </File>
           </Files>
         </Group>

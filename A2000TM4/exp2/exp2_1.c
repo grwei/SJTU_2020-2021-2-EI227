@@ -46,7 +46,7 @@
 void GPIOInit(void);	// GPIO初始化
 void SysTickInit(void); // 设置SysTick中断
 void DevicesInit(void); // MCU器件初始化，注：会调用上述函数
-void UpdateMode(void);		// 更新当前模式，会修改全局变量 mode.
+void UpdateMode(void);	// 更新当前模式，会修改全局变量 mode.
 //*****************************************************************************
 //
 // 变量定义
@@ -147,7 +147,7 @@ int main(void)
 //*****************************************************************************
 //
 // 函数原型：void GPIOInit(void)
-// 函数功能：GPIO初始化. 使能PortK，设置PK4,PK5为输出；使能PortM，设置PM0为输出. 
+// 函数功能：GPIO初始化. 使能PortK，设置PK4,PK5为输出；使能PortM，设置PM0为输出.
 //          （PK4连接TM1638的STB，PK5连接TM1638的DIO，PM0连接TM1638的CLK）
 // 函数参数：无
 // 函数返回值：无
@@ -251,8 +251,8 @@ void SysTick_Handler(void) // 定时周期为20ms
  */
 void UpdateMode()
 {
-	static uint8_t cur_key_code;
-	uint8_t pre_key_code = cur_key_code;
+	static uint8_t cur_key_code;		 // 当前按键状态
+	uint8_t pre_key_code = cur_key_code; // 上一按键状态
 	cur_key_code = key_code;
 	if (!pre_key_code && cur_key_code)
 	{

@@ -1,10 +1,10 @@
 --cpu=Cortex-M4.fp
-".\objects\uartstdio.o"
-".\objects\exp1_1.o"
+".\objects\tm1638.o"
+".\objects\exp2_4.o"
 ".\driverlib\rvmdk\driverlib.lib"
 ".\objects\startup_tm4c129.o"
 ".\objects\system_tm4c129.o"
---strict --scatter ".\Objects\exp0.sct"
+--strict --scatter ".\Objects\exp2.sct"
 --summary_stderr --info summarysizes --map --xref --callgraph --symbols
 --info sizes --info totals --info unused --info veneers
---list ".\Listings\exp0.map" -o .\Objects\exp0.axf
+--list ".\Listings\exp2.map" -o .\Objects\exp2.axf
