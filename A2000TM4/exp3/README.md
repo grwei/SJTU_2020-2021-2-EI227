@@ -4,7 +4,7 @@
 
 ## 任务3-0
 
-- 要加预编译指令 `#define PART_TM4C1294NCPDT`. 可在源代码 `#include "driverlib/pin_map.h"` 之前加，也可在编译指令中指明（课程指导视频采用此方式）. API 函数 [GPIOPinConfigure()](inc/hw_gpio.h) 的源码注释节选：
+- 要加预编译指令 `#define PART_TM4C1294NCPDT`. 可在源代码 `#include "driverlib/pin_map.h"` 之前加，也可在编译指令中指明（课程指导视频采用此方式）. API 函数 [`GPIOPinConfigure`](inc/hw_gpio.h) 的源码注释节选：
   > The available mappings are supplied on a per-device basis in [`pin_map.h`](driverlib/pin_map.h). The PART_\<partno> defines controls which set of defines are included so that they match the device that is being used. For example, `PART_TM4C129XNCZAD` must be defined in order to get the correct pin mappings for the TM4C129XNCZAD device.
 - 例程 [`exp3_0.c`](exp3_0.c) 将按键状态变化的检测写在 ISR `void SysTick_Handler(void)` 中，用 FSM 实现（状态号记录在全局变量 `key_state` 中，在其状态转移动作 C01 中修改全局变量 `run_state`.
   - 也可在主循环中实现按键状态变化的检测，参见[实验2文档](../exp2/README.md).
