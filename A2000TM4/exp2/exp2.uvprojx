@@ -385,9 +385,9 @@
               <FilePath>.\tm1638.c</FilePath>
             </File>
             <File>
-              <FileName>exp2_4.c</FileName>
+              <FileName>exp2_3.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\exp2_4.c</FilePath>
+              <FilePath>.\exp2_3.c</FilePath>
             </File>
           </Files>
         </Group>

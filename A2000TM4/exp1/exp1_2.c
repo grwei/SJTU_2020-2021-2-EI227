@@ -106,7 +106,7 @@ void GPIOInit(void)
     // 设置端口 N 的第0、1位（PN0、PN1）为输出引脚
     GPIOPinTypeGPIOOutput(GPIO_PORTN_BASE, GPIO_PIN_0 | GPIO_PIN_1);
 
-    // 设置端口 J 的第0、1位（PJ0）为输入引脚
+    // 设置端口 J 的第0、1位（PJ0、PJ1）为输入引脚
     GPIOPinTypeGPIOInput(GPIO_PORTJ_BASE, GPIO_PIN_0 | GPIO_PIN_1);
 
     // 端口 J 的第0、1位作为按键输入，类型设置成“推挽上拉”
