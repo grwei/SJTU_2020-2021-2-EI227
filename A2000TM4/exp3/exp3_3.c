@@ -187,7 +187,7 @@ int main(void)
                 cmd_buf.Tx.size = strlen((const char *)cmd_buf.Tx.data);
                 cmd_buf.Tx.next_trans_index = 0;
                 cmd_buf.Tx.WriteEnable = false; // 向命令发送缓存区写入完毕，关写允许（将触发一个发送事件）
-                
+
                 cmd_buf.state = 2;
             }
         }
