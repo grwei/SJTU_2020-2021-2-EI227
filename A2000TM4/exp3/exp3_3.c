@@ -75,7 +75,7 @@ volatile uint8_t clock1000ms = 0;
 volatile uint8_t clock1000ms_flag = 0;
 
 // 时分秒计数器
-volatile uint8_t counter_hh = 0, counter_mm = 0, counter_ss = 0;
+volatile uint8_t counter_hh = 12, counter_mm = 34, counter_ss = 56;
 
 // 8位数码管显示的数字或字母符号
 // 注：板上数码位从左到右序号排列为4、5、6、7、0、1、2、3
@@ -132,11 +132,11 @@ struct cmd_buf_t
      * 1. 状态定义. 0-IDLE（空闲）；1-BUSY_RX（接收忙）；2-BUSY_TX（处理或发送忙）.
      * 2. 状态动作. 0-无；1-接收时间窗计数进行，把进入 UART Rx FIFO 的数据全部存入命令接收缓存区（直至缓存区满）；2-执行命令（若合法）、决定 UART 回传内容、将回传内容（若有）写入命令发送缓存区、置命令发送缓存区相关标志并关写允许（若有写入）、以**非阻塞方式**将命令发送缓存区的数据（若有）送到 UART Tx FIFO.
      * 3. 状态转移条件. C01-发生 `UART_RX` 或 `UART_RT` 中断；C12-接收计时结束；C20-命令（**若有且**合法）执行完毕，且回传内容（若有）已全部送到 UART Tx FIFO；C02-定时1秒到.
-     * 4. 状态转移动作. C01-接收时间计数器复位、接收缓存区复位、将第一个字符存入接收缓存区；C12-关命令接收缓存区写允许，发送缓存区复位；C20-无；C02-关命令接收缓存区写允许、发送缓存区复位、将报时信息写入发送缓存区、关发送缓存区写允许.
+     * 4. 状态转移动作. C01-接收时间计数器复位、接收缓存区复位、将第一个字符存入接收缓存区；C12-关命令接收缓存区写允许，发送缓存区复位（包括开写允许）；C20-无；C02-关命令接收缓存区写允许、发送缓存区复位（包括开写允许）、将报时信息写入发送缓存区、关发送缓存区写允许.
      */
     volatile uint8_t state;          // 当前状态
     volatile uint8_t Rx_timeout_cnt; // 接收时间计数器
-    const uint8_t V_Rx_timeout;      // 接收时长
+    const uint8_t V_Rx_timeout;      // 接收时长(*20ms)
 
 } cmd_buf = {{0, CMD_RX_BUF_MAX_SIZE, {'\0'}, true}, {0, CMD_TX_BUF_MAX_SIZE, {'\0'}, 0, true}, 0, 0, V_CMD_RX_TIMEOUT};
 
@@ -187,7 +187,7 @@ int main(void)
                 cmd_buf.Tx.size = strlen((const char *)cmd_buf.Tx.data);
                 cmd_buf.Tx.next_trans_index = 0;
                 cmd_buf.Tx.WriteEnable = false; // 向命令发送缓存区写入完毕，关写允许（将触发一个发送事件）
-                
+
                 cmd_buf.state = 2;
             }
         }
@@ -414,7 +414,7 @@ void UART0_Handler(void)
         {
             if (UARTCharPutNonBlocking(UART0_BASE, cmd_buf.Tx.data[cmd_buf.Tx.next_trans_index]))
             {
-                // 若全部发送完毕，则清空命令发送缓存区，开写允许
+                // 若全部发送完毕，则回到状态0
                 if (++cmd_buf.Tx.next_trans_index >= cmd_buf.Tx.size)
                 {
                     // C20

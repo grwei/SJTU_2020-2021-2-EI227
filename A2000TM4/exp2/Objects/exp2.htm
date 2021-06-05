@@ -3,7 +3,7 @@
 <title>Static Call Graph - [.\Objects\exp2.axf]</title></head>
 <body><HR>
 <H1>Static Call Graph for image .\Objects\exp2.axf</H1><HR>
-<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 5060422: Last Updated: Sun May 09 17:08:10 2021
+<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 5060422: Last Updated: Wed May 12 13:05:29 2021
 <BR><P>
 <H3>Maximum Stack Usage =        100 bytes + Unknown(Functions without stacksize, Cycles, Untraceable Function Pointers)</H3><H3>
 Call chain for Maximum Stack Depth:</H3>
@@ -228,7 +228,7 @@ Function Pointers
  <LI><a href="#[43]">SSI3_Handler</a> from startup_tm4c129.o(.text) referenced from startup_tm4c129.o(RESET)
  <LI><a href="#[8]">SVC_Handler</a> from startup_tm4c129.o(.text) referenced from startup_tm4c129.o(RESET)
  <LI><a href="#[28]">SYSCTL_Handler</a> from startup_tm4c129.o(.text) referenced from startup_tm4c129.o(RESET)
- <LI><a href="#[b]">SysTick_Handler</a> from exp2_4.o(i.SysTick_Handler) referenced from startup_tm4c129.o(RESET)
+ <LI><a href="#[b]">SysTick_Handler</a> from exp2_3.o(i.SysTick_Handler) referenced from startup_tm4c129.o(RESET)
  <LI><a href="#[79]">SystemInit</a> from system_tm4c129.o(i.SystemInit) referenced from startup_tm4c129.o(.text)
  <LI><a href="#[54]">TAMPER_Handler</a> from startup_tm4c129.o(.text) referenced from startup_tm4c129.o(RESET)
  <LI><a href="#[1f]">TIMER0A_Handler</a> from startup_tm4c129.o(.text) referenced from startup_tm4c129.o(RESET)
@@ -1356,7 +1356,7 @@ Global Symbols
 
 <P><STRONG><a name="[e1]"></a>__semihosting_library_function</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, indicate_semi.o(.text), UNUSED)
 
-<P><STRONG><a name="[9c]"></a>DevicesInit</STRONG> (Thumb, 28 bytes, Stack size 8 bytes, exp2_4.o(i.DevicesInit))
+<P><STRONG><a name="[9c]"></a>DevicesInit</STRONG> (Thumb, 28 bytes, Stack size 8 bytes, exp2_3.o(i.DevicesInit))
 <BR><BR>[Stack]<UL><LI>Max Depth = 52<LI>Call Chain = DevicesInit &rArr; GPIOInit &rArr; GPIOPinTypeGPIOOutput &rArr; GPIOPadConfigSet
 </UL>
 <BR>[Calls]<UL><LI><a href="#[9d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SysCtlClockFreqSet
@@ -1372,7 +1372,7 @@ Global Symbols
 <LI><a href="#[a4]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;GPIOPinTypeGPIOInput
 </UL>
 
-<P><STRONG><a name="[9e]"></a>GPIOInit</STRONG> (Thumb, 60 bytes, Stack size 8 bytes, exp2_4.o(i.GPIOInit))
+<P><STRONG><a name="[9e]"></a>GPIOInit</STRONG> (Thumb, 60 bytes, Stack size 8 bytes, exp2_3.o(i.GPIOInit))
 <BR><BR>[Stack]<UL><LI>Max Depth = 44<LI>Call Chain = GPIOInit &rArr; GPIOPinTypeGPIOOutput &rArr; GPIOPadConfigSet
 </UL>
 <BR>[Calls]<UL><LI><a href="#[a2]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SysCtlPeripheralReady
@@ -1446,7 +1446,7 @@ Global Symbols
 <BR><BR>[Called By]<UL><LI><a href="#[9f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SysTickInit
 </UL>
 
-<P><STRONG><a name="[9f]"></a>SysTickInit</STRONG> (Thumb, 28 bytes, Stack size 8 bytes, exp2_4.o(i.SysTickInit))
+<P><STRONG><a name="[9f]"></a>SysTickInit</STRONG> (Thumb, 28 bytes, Stack size 8 bytes, exp2_3.o(i.SysTickInit))
 <BR><BR>[Stack]<UL><LI>Max Depth = 8<LI>Call Chain = SysTickInit
 </UL>
 <BR>[Calls]<UL><LI><a href="#[a8]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SysTickPeriodSet
@@ -1464,7 +1464,7 @@ Global Symbols
 <BR><BR>[Called By]<UL><LI><a href="#[9f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SysTickInit
 </UL>
 
-<P><STRONG><a name="[b]"></a>SysTick_Handler</STRONG> (Thumb, 80 bytes, Stack size 8 bytes, exp2_4.o(i.SysTick_Handler))
+<P><STRONG><a name="[b]"></a>SysTick_Handler</STRONG> (Thumb, 88 bytes, Stack size 8 bytes, exp2_3.o(i.SysTick_Handler))
 <BR><BR>[Stack]<UL><LI>Max Depth = 100<LI>Call Chain = SysTick_Handler &rArr; TM1638_RefreshDIGIandLED &rArr; TM1638_Serial_Input &rArr; GPIOPinTypeGPIOOutput &rArr; GPIOPadConfigSet
 </UL>
 <BR>[Calls]<UL><LI><a href="#[ab]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;TM1638_RefreshDIGIandLED
@@ -1529,7 +1529,7 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[ac]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;TM1638_Readkeyboard
 </UL>
 
-<P><STRONG><a name="[87]"></a>main</STRONG> (Thumb, 482 bytes, Stack size 0 bytes, exp2_4.o(i.main))
+<P><STRONG><a name="[87]"></a>main</STRONG> (Thumb, 370 bytes, Stack size 0 bytes, exp2_3.o(i.main))
 <BR><BR>[Stack]<UL><LI>Max Depth = 60<LI>Call Chain = main &rArr; TM1638_Init &rArr; TM1638_Serial_Input &rArr; GPIOPinTypeGPIOOutput &rArr; GPIOPadConfigSet
 </UL>
 <BR>[Calls]<UL><LI><a href="#[9c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;DevicesInit

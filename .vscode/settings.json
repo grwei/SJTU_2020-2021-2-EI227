@@ -1,0 +1,9 @@
+{
+    "python.pythonPath": "D:\\Users\\31301\\AppData\\Local\\Programs\\Python\\Python39\\python.exe",
+    "files.autoGuessEncoding": true,
+    "files.associations": {
+        "jlx12864.h": "c",
+        "string.h": "c",
+        "hw_memmap.h": "c"
+    }
+}

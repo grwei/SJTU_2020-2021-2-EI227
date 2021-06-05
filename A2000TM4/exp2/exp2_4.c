@@ -143,7 +143,7 @@ int main(void)
 			// C02: 保存当前状态号（通过更新 pre_state），将计数值清零
 			if (pre_key_code != 2 && cur_key_code == 2)
 			{
-				test_counter = 9999;
+				test_counter = (flag_DecCnt ? 0 : 9999);
 				pre_state = 0;
 				cur_state = 2;
 			}
