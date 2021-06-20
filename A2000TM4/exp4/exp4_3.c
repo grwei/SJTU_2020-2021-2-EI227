@@ -451,7 +451,7 @@ void ui_proc005(void)
         key_LEFT_flag = key_RIGHT_flag = key_DECREASE_flag = key_INCREASE_flag = 0;
     }
 
-    // 当5秒无操作："设置"反白效果解除，下一状态ACT0
+    // 当5秒无键操作："设置"反白效果解除，下一状态ACT0
     if (NOKEY_clock5s_flag)
     {
         NOKEY_clock5s_flag = 0;
@@ -744,7 +744,7 @@ void ui_proc301(void)
         display_GB2312_string(act[3]->row_page[6], act[3]->col_page[6] * 8 - 7, act[3]->str[6], 1);
         ui_state = 0x306;
     }
-    // 当"右"键按下：光标移到工作参数十分位的位置，下一状态ACT303
+    // 当"右"键按下：光标移到工作参数的十分位的位置，下一状态ACT303
     else if (key_RIGHT_flag)
     {
         key_RIGHT_flag = 0;
